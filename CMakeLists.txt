@@ -8,5 +8,4 @@ add_library(imgui STATIC
 	backends/imgui_impl_vulkan.cpp
 )
 
-target_link_libraries(imgui PUBLIC glfw)
 target_include_directories(imgui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
