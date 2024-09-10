@@ -1546,6 +1546,28 @@ enum ImGuiDockNodeState
     ImGuiDockNodeState_HostWindowVisible
 };
 
+
+struct IMGUI_API ImGuiDockTabStaticSelection
+{
+    const char* TabName = "none";
+    ImVec2 InitialClickPos = ImVec2(0,0);
+    ImVec2 TitleBarPos;
+    ImVec2 TitleBarSize;
+    bool Pressed = false;
+    bool MousePressed = false;
+
+};
+
+	enum class DockEmplacement
+	{
+		DockBlank,
+		DockUp,
+		DockDown,
+		DockLeft,
+		DockRight,
+		DockFull
+	};
+
 // sizeof() 156~192
 struct IMGUI_API ImGuiDockNode
 {
@@ -2070,6 +2092,8 @@ struct ImGuiContext
     int                     WantTextInputNextFrame;
     char                    TempBuffer[1024 * 3 + 1];           // Temporary text buffer
 
+    ImGuiDockTabStaticSelection DockTabStaticSelection;
+
     ImGuiContext(ImFontAtlas* shared_font_atlas)
     {
         Initialized = false;
@@ -2428,7 +2452,8 @@ public:
     float       TitleBarHeight() const  { ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_NoTitleBar) ? 0.0f : CalcFontSize() + g.Style.FramePadding.y * 2.0f; }
     ImRect      TitleBarRect() const    { return ImRect(Pos, ImVec2(Pos.x + SizeFull.x, Pos.y + TitleBarHeight())); }
     float       MenuBarHeight() const   { ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_MenuBar) ? DC.MenuBarOffset.y + CalcFontSize() + g.Style.FramePadding.y * 2.0f : 0.0f; }
-    ImRect      MenuBarRect() const     { float y1 = Pos.y + TitleBarHeight(); return ImRect(Pos.x, y1, Pos.x + SizeFull.x, y1 + MenuBarHeight()); }
+    ImRect      MenuBarRect() const     { float y1 = Pos.y + TitleBarHeight() -12.0f; return ImRect(Pos.x, y1, Pos.x + SizeFull.x, y1 + MenuBarHeight()); }
+    ImRect      MenuBarRect(float offsetY) const     { float y1 = Pos.y + TitleBarHeight() - 10.0f; return ImRect(Pos.x, y1, Pos.x + SizeFull.x, y1 + MenuBarHeight()); }
 };
 
 //-----------------------------------------------------------------------------
