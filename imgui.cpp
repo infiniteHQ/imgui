@@ -17567,7 +17567,7 @@ void ImGui::DockNodeEndAmendTabBar()
     PopID();
     End();
 }
-#include <iostream>
+
 // Submit the tab bar corresponding to a dock node and various housekeeping details.
 static void ImGui::DockNodeUpdateTabBar(ImGuiDockNode *node, ImGuiWindow *host_window)
 {
@@ -17811,7 +17811,10 @@ if (TabItemEx(tab_bar, window->Name, window->HasCloseButton ? &tab_open : NULL, 
             if (!tab_open)
                 node->WantCloseTabId = window->TabId;
             if (tab_bar->VisibleTabId == window->TabId)
+            {
                 node->VisibleWindow = window;
+            }
+                
 
             window->DockTabItemStatusFlags = g.LastItemData.StatusFlags;
             window->DockTabItemRect = g.LastItemData.Rect;
@@ -19450,7 +19453,9 @@ void ImGui::BeginDocked(ImGuiWindow *window, bool *p_open)
     }
 
     // Position/Size window
-    SetNextWindowPos(node->Pos);
+
+    // TODO : Optional counter padding of 12.0f
+    SetNextWindowPos(ImVec2(node->Pos.x,node->Pos.y-12.0f));
     SetNextWindowSize(node->Size);
     g.NextWindowData.PosUndock = false; // Cancel implicit undocking of SetNextWindowPos()
     window->DockIsActive = true;

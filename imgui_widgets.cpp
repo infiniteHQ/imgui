@@ -7711,6 +7711,7 @@ bool ImGui::BeginTabBarEx(ImGuiTabBar* tab_bar, const ImRect& tab_bar_bb, ImGuiT
 
     return true;
 }
+
 void    ImGui::EndTabBar()
 {
     ImGuiContext& g = *GImGui;
