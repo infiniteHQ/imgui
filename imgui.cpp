@@ -19455,7 +19455,7 @@ void ImGui::BeginDocked(ImGuiWindow *window, bool *p_open)
     // Position/Size window
 
     // TODO : Optional counter padding of 12.0f
-    SetNextWindowPos(ImVec2(node->Pos.x,node->Pos.y-12.0f));
+    SetNextWindowPos(ImVec2(node->Pos.x,node->Pos.y-ImGui::GetCurrentContext()->Style.DockSpaceMenubarPaddingY));
     SetNextWindowSize(node->Size);
     g.NextWindowData.PosUndock = false; // Cancel implicit undocking of SetNextWindowPos()
     window->DockIsActive = true;
