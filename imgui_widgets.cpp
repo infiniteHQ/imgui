@@ -716,6 +716,66 @@ bool ImGui::Button(const char* label, const ImVec2& size_arg)
     return ButtonEx(label, size_arg, ImGuiButtonFlags_None);
 }
 
+
+bool ImGui::ImageSizeButtonWithText(ImTextureID texId, float button_width, const char* label, const ImVec2& imageSize, const ImVec2& uv0, const ImVec2& uv1, int frame_padding, const ImVec4& bg_col, const ImVec4& tint_col) {
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+
+    ImVec2 size = imageSize;
+    if (size.x <= 0 && size.y <= 0) {
+        size.x = size.y = ImGui::GetTextLineHeightWithSpacing();
+    } else {
+        if (size.x <= 0) size.x = size.y;
+        else if (size.y <= 0) size.y = size.x;
+        size *= window->FontWindowScale * ImGui::GetIO().FontGlobalScale;
+    }
+
+    ImGuiContext& g = *GImGui;
+    const ImGuiStyle& style = g.Style;
+
+    const ImGuiID id = window->GetID(label);
+    const ImVec2 textSize = ImGui::CalcTextSize(label, NULL, true);
+    const bool hasText = textSize.x > 0;
+
+    const float innerSpacing = hasText ? ((frame_padding >= 0) ? (float)frame_padding : (style.ItemInnerSpacing.x)) : 0.f;
+    const ImVec2 padding = (frame_padding >= 0) ? ImVec2((float)frame_padding, (float)frame_padding) : style.FramePadding;
+    const ImVec2 totalSizeWithoutPadding(size.x + innerSpacing + textSize.x, size.y > textSize.y ? size.y : textSize.y);
+
+    // Adjust width if button_width is specified
+    ImVec2 totalSize = totalSizeWithoutPadding;
+    if (button_width > 0.0f) {
+        totalSize.x = button_width;
+    }
+
+    const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + totalSize + padding * 2);
+    ImVec2 start(0, 0);
+    start = window->DC.CursorPos + padding;
+    if (size.y < textSize.y) start.y += (textSize.y - size.y) * .5f;
+    const ImRect image_bb(start, start + size);
+    start = window->DC.CursorPos + padding;
+    start.x += size.x + innerSpacing;
+    if (size.y > textSize.y) start.y += (size.y - textSize.y) * .5f;
+    ImGui::ItemSize(bb);
+    if (!ImGui::ItemAdd(bb, id))
+        return false;
+
+    bool hovered = false, held = false;
+    bool pressed = ImGui::ButtonBehavior(bb, id, &hovered, &held);
+
+    // Render
+    const ImU32 col = ImGui::GetColorU32((hovered && held) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+    ImGui::RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0f, style.FrameRounding));
+    if (bg_col.w > 0.0f)
+        window->DrawList->AddRectFilled(image_bb.Min, image_bb.Max, ImGui::GetColorU32(bg_col));
+
+    window->DrawList->AddImage(texId, image_bb.Min, image_bb.Max, uv0, uv1, ImGui::GetColorU32(tint_col));
+
+    if (textSize.x > 0) ImGui::RenderText(start, label);
+    return pressed;
+}
+
+
 // Small buttons fits within text without additional vertical spacing.
 bool ImGui::SmallButton(const char* label)
 {
@@ -1591,6 +1651,81 @@ static float CalcMaxPopupHeightFromItemCount(int items_count)
     if (items_count <= 0)
         return FLT_MAX;
     return (g.FontSize + g.Style.ItemSpacing.y) * items_count - g.Style.ItemSpacing.y + (g.Style.WindowPadding.y * 2);
+}
+
+bool ImGui::BeginCombo(const char* label, const std::function<void()>& preview_render, ImGuiComboFlags flags)
+{
+    ImGuiContext& g = *GImGui;
+    ImGuiWindow* window = GetCurrentWindow();
+
+    ImGuiNextWindowDataFlags backup_next_window_data_flags = g.NextWindowData.Flags;
+    g.NextWindowData.ClearFlags(); // We behave like Begin() and need to consume those values
+    if (window->SkipItems)
+        return false;
+
+    const ImGuiStyle& style = g.Style;
+    const ImGuiID id = window->GetID(label);
+    IM_ASSERT((flags & (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)) != (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)); // Can't use both flags together
+
+    const float arrow_size = (flags & ImGuiComboFlags_NoArrowButton) ? 0.0f : GetFrameHeight();
+    const ImVec2 label_size = CalcTextSize(label, NULL, true);
+    const float w = (flags & ImGuiComboFlags_NoPreview) ? arrow_size : CalcItemWidth();
+    const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(w, label_size.y + style.FramePadding.y * 2.0f));
+    const ImRect total_bb(bb.Min, bb.Max + ImVec2(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f));
+    ItemSize(total_bb, style.FramePadding.y);
+    if (!ItemAdd(total_bb, id, &bb))
+        return false;
+
+    // Open on click
+    bool hovered, held;
+    bool pressed = ButtonBehavior(bb, id, &hovered, &held);
+    const ImGuiID popup_id = ImHashStr("##ComboPopup", 0, id);
+    bool popup_open = IsPopupOpen(popup_id, ImGuiPopupFlags_None);
+    if (pressed && !popup_open)
+    {
+        OpenPopupEx(popup_id, ImGuiPopupFlags_None);
+        popup_open = true;
+    }
+
+    // Render shape
+    const ImU32 frame_col = GetColorU32(hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg);
+    const float value_x2 = ImMax(bb.Min.x, bb.Max.x - arrow_size);
+    RenderNavHighlight(bb, id);
+    if (!(flags & ImGuiComboFlags_NoPreview))
+        window->DrawList->AddRectFilled(bb.Min, ImVec2(value_x2, bb.Max.y), frame_col, style.FrameRounding, (flags & ImGuiComboFlags_NoArrowButton) ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersLeft);
+
+    if (!(flags & ImGuiComboFlags_NoArrowButton))
+    {
+        ImU32 bg_col = GetColorU32((popup_open || hovered) ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+        ImU32 text_col = GetColorU32(ImGuiCol_Text);
+        window->DrawList->AddRectFilled(ImVec2(value_x2, bb.Min.y), bb.Max, bg_col, style.FrameRounding, (w <= arrow_size) ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersRight);
+        if (value_x2 + arrow_size - style.FramePadding.x <= bb.Max.x)
+            RenderArrow(window->DrawList, ImVec2(value_x2 + style.FramePadding.y, bb.Min.y + style.FramePadding.y), text_col, ImGuiDir_Down, 1.0f);
+    }
+    RenderFrameBorder(bb.Min, bb.Max, style.FrameRounding);
+
+    // Custom preview rendering using std::function
+    if (!(flags & ImGuiComboFlags_NoPreview))
+    {
+        ImVec2 preview_pos = bb.Min + style.FramePadding;
+        ImVec2 preview_size = ImVec2(value_x2 - preview_pos.x, bb.Max.y - preview_pos.y);
+        ImGui::PushClipRect(preview_pos, preview_pos + preview_size, true);
+        ImGui::SetCursorScreenPos(preview_pos);
+        preview_render();
+        ImGui::PopClipRect();
+    }
+
+    if (label_size.x > 0)
+        RenderText(ImVec2(bb.Max.x + style.ItemInnerSpacing.x, bb.Min.y + style.FramePadding.y), label);
+
+    if (!popup_open)
+        return false;
+
+    // Restore window data flags for the dropdown
+    g.NextWindowData.Flags = backup_next_window_data_flags;
+
+    // Start rendering the popup (dropdown)
+    return BeginComboPopup(popup_id, bb, flags);
 }
 
 bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboFlags flags)
