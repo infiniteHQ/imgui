@@ -1553,9 +1553,9 @@ struct IMGUI_API ImGuiDockTabStaticSelection
     ImVec2 InitialClickPos = ImVec2(0,0);
     ImVec2 TitleBarPos;
     ImVec2 TitleBarSize;
+
     bool Pressed = false;
     bool MousePressed = false;
-
 };
 
 	enum class DockEmplacement
@@ -2432,6 +2432,11 @@ struct IMGUI_API ImGuiWindow
     ImGuiID                 DockId;                             // Backup of last valid DockNode->ID, so single window remember their dock node id even when they are not bound any more
     ImGuiItemStatusFlags    DockTabItemStatusFlags;
     ImRect                  DockTabItemRect;
+
+    std::function<void()>   ContextMenuCallback;
+    std::function<void()>   CloseCallback;
+    bool                    Saved;
+    bool                    Closable;
 
 public:
     ImGuiWindow(ImGuiContext* context, ImTextureID* textureID, const char* name);

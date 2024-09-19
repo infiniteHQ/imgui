@@ -865,7 +865,6 @@ CODE
 #include <TargetConditionals.h>
 #endif
 
-
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
 
@@ -17735,78 +17734,120 @@ static void ImGui::DockNodeUpdateTabBar(ImGuiDockNode *node, ImGuiWindow *host_w
                 g.Style.Colors[GWindowDockStyleColors[color_n]] = ColorConvertU32ToFloat4(window->DockStyle.Colors[color_n]);
 
             bool tab_open = true;
-if (TabItemEx(tab_bar, window->Name, window->HasCloseButton ? &tab_open : NULL, tab_item_flags, window))
-{
-    ImVec2 tab_item_pos = ImGui::GetItemRectMin();
-    ImVec2 tab_item_size = ImGui::GetItemRectSize();
 
-    bool is_hovered = ImGui::IsItemHovered();
-    bool is_pressed = ImGui::IsMouseDown(ImGuiMouseButton_Left);
-
-    bool is_selected = (g.DockTabStaticSelection.TabName == window->Name);
-
-    /* DEBUG ONLY
-    ImU32 color;
-    if (is_hovered)
-        color = IM_COL32(255, 0, 0, 255); // Rouge si survolé
-    else if (is_selected)
-        color = IM_COL32(255, 165, 0, 255); // Orange si sélectionné
-    else
-        color = IM_COL32(128, 0, 128, 255); // Violet sinon
-
-    draw_list->AddRect(
-        tab_item_pos,
-        tab_item_pos + tab_item_size,
-        color,    
-        0.0f,              
-        ImDrawCornerFlags_All, 
-        2.0f                  
-    );*/
-
-
-    const float drag_threshold = 5.0f; // TODO: not over +Y but only -Y or +/-X
-
-    if (is_hovered && ImGui::IsMouseDown(ImGuiMouseButton_Left))
-    {
-        if (g.DockTabStaticSelection.InitialClickPos.x == 0 && g.DockTabStaticSelection.InitialClickPos.y == 0)
-        {
-            g.DockTabStaticSelection.InitialClickPos = ImGui::GetMousePos();
-        }
-
-        ImVec2 current_mouse_pos = ImGui::GetMousePos();
-        float distance_moved = sqrtf((current_mouse_pos.x - g.DockTabStaticSelection.InitialClickPos.x) * (current_mouse_pos.x - g.DockTabStaticSelection.InitialClickPos.x) +
-                                     (current_mouse_pos.y - g.DockTabStaticSelection.InitialClickPos.y) * (current_mouse_pos.y - g.DockTabStaticSelection.InitialClickPos.y));
-
-        if (distance_moved > drag_threshold)
-        {
-            if (!is_selected)
+            if (TabItemEx(tab_bar, window->Name, window->HasCloseButton ? &tab_open : NULL, tab_item_flags, window))
             {
-                g.DockTabStaticSelection.TabName = window->Name;
-                g.DockTabStaticSelection.TitleBarPos = tab_item_pos;
-                g.DockTabStaticSelection.TitleBarSize = tab_item_size;
-                g.DockTabStaticSelection.Pressed = true;
-            }
-        }
-    }
-    else
-    {
-        int mouse_x, mouse_y;
-        Uint32 mouse_buttons = SDL_GetGlobalMouseState(&mouse_x, &mouse_y);
+                ImVec2 tab_item_pos = ImGui::GetItemRectMin();
+                ImVec2 tab_item_size = ImGui::GetItemRectSize();
 
-        if (!(mouse_buttons & SDL_BUTTON(SDL_BUTTON_LEFT)))
-        {
-            g.DockTabStaticSelection.InitialClickPos = ImVec2(0, 0);
+                bool is_hovered = ImGui::IsItemHovered();
+                bool is_pressed = ImGui::IsMouseDown(ImGuiMouseButton_Left);
+                bool is_right_pressed = ImGui::IsMouseDown(ImGuiMouseButton_Right);
 
-            if (is_selected)
-            {
-                g.DockTabStaticSelection.TabName = "none";
-                g.DockTabStaticSelection.TitleBarPos = ImVec2(0, 0);
-                g.DockTabStaticSelection.TitleBarSize = ImVec2(0, 0);
-                g.DockTabStaticSelection.Pressed = false;
+                if (ImGui::BeginPopupContextItem("TabContextMenu"))
+                {
+                    ImVec4 grayColor = ImVec4(0.4f, 0.4f, 0.4f, 1.0f);
+                    ImVec4 graySeparatorColor = ImVec4(0.4f, 0.4f, 0.4f, 0.5f);
+                    ImVec4 darkBackgroundColor = ImVec4(0.15f, 0.15f, 0.15f, 1.0f);
+                    ImVec4 lightBorderColor = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
+
+                    ImGui::PushStyleColor(ImGuiCol_PopupBg, darkBackgroundColor);
+                    ImGui::PushStyleColor(ImGuiCol_Border, lightBorderColor);
+                    ImGui::PushStyleVar(ImGuiStyleVar_PopupRounding, 3.0f);
+                    if (window->Closable)
+                    {
+                        if (ImGui::MenuItem("Close window", "Close this current window"))
+                        {
+                            if (window->CloseCallback)
+                            {
+                                window->CloseCallback();
+                            }
+                        }
+
+                    }
+                    if (window->ContextMenuCallback)
+                    {
+                        ImGui::PushStyleColor(ImGuiCol_Separator, graySeparatorColor);
+                        ImGui::Separator();
+                        ImGui::PopStyleColor();
+                        window->ContextMenuCallback();
+                    }
+
+                    ImGui::PopStyleVar();
+                    ImGui::PopStyleColor(2);
+
+                    ImGui::EndPopup();
+                }
+
+                // Ouvrir le menu contextuel au clic droit
+                if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+                {
+                    ImGui::OpenPopup("TabContextMenu");
+                }
+
+                bool is_selected = (g.DockTabStaticSelection.TabName == window->Name);
+
+                /* DEBUG ONLY
+                ImU32 color;
+                if (is_hovered)
+                    color = IM_COL32(255, 0, 0, 255); // Rouge si survolé
+                else if (is_selected)
+                    color = IM_COL32(255, 165, 0, 255); // Orange si sélectionné
+                else
+                    color = IM_COL32(128, 0, 128, 255); // Violet sinon
+
+                draw_list->AddRect(
+                    tab_item_pos,
+                    tab_item_pos + tab_item_size,
+                    color,
+                    0.0f,
+                    ImDrawCornerFlags_All,
+                    2.0f
+                );*/
+
+                const float drag_threshold = 5.0f; // TODO: not over +Y but only -Y or +/-X
+
+                if (is_hovered && ImGui::IsMouseDown(ImGuiMouseButton_Left))
+                {
+                    if (g.DockTabStaticSelection.InitialClickPos.x == 0 && g.DockTabStaticSelection.InitialClickPos.y == 0)
+                    {
+                        g.DockTabStaticSelection.InitialClickPos = ImGui::GetMousePos();
+                    }
+
+                    ImVec2 current_mouse_pos = ImGui::GetMousePos();
+                    float distance_moved = sqrtf((current_mouse_pos.x - g.DockTabStaticSelection.InitialClickPos.x) * (current_mouse_pos.x - g.DockTabStaticSelection.InitialClickPos.x) +
+                                                 (current_mouse_pos.y - g.DockTabStaticSelection.InitialClickPos.y) * (current_mouse_pos.y - g.DockTabStaticSelection.InitialClickPos.y));
+
+                    if (distance_moved > drag_threshold)
+                    {
+                        if (!is_selected)
+                        {
+                            g.DockTabStaticSelection.TabName = window->Name;
+                            g.DockTabStaticSelection.TitleBarPos = tab_item_pos;
+                            g.DockTabStaticSelection.TitleBarSize = tab_item_size;
+                            g.DockTabStaticSelection.Pressed = true;
+                        }
+                    }
+                }
+                else
+                {
+                    int mouse_x, mouse_y;
+                    Uint32 mouse_buttons = SDL_GetGlobalMouseState(&mouse_x, &mouse_y);
+
+                    if (!(mouse_buttons & SDL_BUTTON(SDL_BUTTON_LEFT)))
+                    {
+                        g.DockTabStaticSelection.InitialClickPos = ImVec2(0, 0);
+
+                        if (is_selected)
+                        {
+                            g.DockTabStaticSelection.TabName = "none";
+                            g.DockTabStaticSelection.TitleBarPos = ImVec2(0, 0);
+                            g.DockTabStaticSelection.TitleBarSize = ImVec2(0, 0);
+                            g.DockTabStaticSelection.Pressed = false;
+                        }
+                    }
+                }
             }
-        }
-    }
-}
 
             if (!tab_open)
                 node->WantCloseTabId = window->TabId;
@@ -17814,7 +17855,6 @@ if (TabItemEx(tab_bar, window->Name, window->HasCloseButton ? &tab_open : NULL, 
             {
                 node->VisibleWindow = window;
             }
-                
 
             window->DockTabItemStatusFlags = g.LastItemData.StatusFlags;
             window->DockTabItemRect = g.LastItemData.Rect;
@@ -17823,11 +17863,6 @@ if (TabItemEx(tab_bar, window->Name, window->HasCloseButton ? &tab_open : NULL, 
                 host_window->NavLastIds[1] = window->TabId;
         }
     }
-
-
-
-
-
 
     // Restore style colors
     for (int color_n = 0; color_n < ImGuiWindowDockStyleCol_COUNT; color_n++)
@@ -19455,7 +19490,7 @@ void ImGui::BeginDocked(ImGuiWindow *window, bool *p_open)
     // Position/Size window
 
     // TODO : Optional counter padding of 12.0f
-    SetNextWindowPos(ImVec2(node->Pos.x,node->Pos.y-ImGui::GetCurrentContext()->Style.DockSpaceMenubarPaddingY));
+    SetNextWindowPos(ImVec2(node->Pos.x, node->Pos.y - ImGui::GetCurrentContext()->Style.DockSpaceMenubarPaddingY));
     SetNextWindowSize(node->Size);
     g.NextWindowData.PosUndock = false; // Cancel implicit undocking of SetNextWindowPos()
     window->DockIsActive = true;
