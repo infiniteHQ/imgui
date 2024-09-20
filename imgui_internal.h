@@ -2437,6 +2437,8 @@ struct IMGUI_API ImGuiWindow
     std::function<void()>   CloseCallback;
     bool                    Saved;
     bool                    Closable;
+    bool                    DragDisabled;
+    bool                    ContextMenuDisabled;
 
 public:
     ImGuiWindow(ImGuiContext* context, ImTextureID* textureID, const char* name);
