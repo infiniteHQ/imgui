@@ -331,7 +331,7 @@ namespace ImGui
     //    returned true. Begin and BeginChild are the only odd ones out. Will be fixed in a future update.]
     // - Note that the bottom of window stack always contains a window called "Debug".
     IMGUI_API bool          Begin(const char* name, bool* p_open = NULL, ImGuiWindowFlags flags = 0);
-    IMGUI_API bool          Begin(const char* name, ImTextureID* logo, bool* p_open = NULL, ImGuiWindowFlags flags = 0);
+    IMGUI_API bool          Begin(const char* name, ImTextureID* logo, bool* p_open = NULL, ImGuiWindowFlags flags = 0, ImVec2 internal_padding = ImVec2(0,0));
 
     IMGUI_API void          End();
 
@@ -902,7 +902,9 @@ IMGUI_API float         GetTextLineHeight();                                    
     IMGUI_API void          SetItemAllowOverlap();                                              // allow last item to be overlapped by a subsequent item. sometimes useful with invisible buttons, selectables, etc. to catch unused area.
 // label is used as id
 // <0 frame_padding uses default frame padding settings. 0 for no padding
+IMGUI_API bool ImageButtonWithTextWithIcon(ImTextureID texIdFirst, ImTextureID texIdSecond,const char* label, const ImVec2& imageSizeFirst=ImVec2(0,0), const ImVec2& imageSizeSecond=ImVec2(0,0),const ImVec2& uv0 = ImVec2(0,0),  const ImVec2& uv1 = ImVec2(1,1), int frame_padding = -1, const ImVec4& bg_col = ImVec4(0,0,0,0), const ImVec4& tint_col = ImVec4(1,1,1,1));
 IMGUI_API bool ImageButtonWithText(ImTextureID texId,const char* label,const ImVec2& imageSize=ImVec2(0,0), const ImVec2& uv0 = ImVec2(0,0),  const ImVec2& uv1 = ImVec2(1,1), int frame_padding = -1, const ImVec4& bg_col = ImVec4(0,0,0,0), const ImVec4& tint_col = ImVec4(1,1,1,1));
+IMGUI_API bool RightImageButtonWithText(ImTextureID texId,const char* label,const ImVec2& imageSize=ImVec2(0,0), const ImVec2& uv0 = ImVec2(0,0),  const ImVec2& uv1 = ImVec2(1,1), int frame_padding = -1, const ImVec4& bg_col = ImVec4(0,0,0,0), const ImVec4& tint_col = ImVec4(1,1,1,1));
 
     // Viewports
     // - Currently represents the Platform Window created by the application which is hosting our Dear ImGui windows.

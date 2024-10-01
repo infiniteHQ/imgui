@@ -6524,6 +6524,71 @@ static bool ImGui::UpdateWindowManualResize(ImGuiWindow *window, const ImVec2 &s
 
 namespace ImGui
 {
+bool ImageButtonWithTextWithIcon(ImTextureID texIdFirst, ImTextureID texIdSecond, const char* label, const ImVec2& imageSizeFirst, const ImVec2& imageSizeSecond, const ImVec2 &uv0, const ImVec2 &uv1, int frame_padding, const ImVec4 &bg_col, const ImVec4 &tint_col)
+{
+    ImGuiWindow *window = GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+
+    ImVec2 sizeFirst = imageSizeFirst;
+    ImVec2 sizeSecond = imageSizeSecond;
+
+    if (sizeFirst.x <= 0 && sizeFirst.y <= 0)
+        sizeFirst.x = sizeFirst.y = ImGui::GetTextLineHeightWithSpacing();
+    if (sizeSecond.x <= 0 && sizeSecond.y <= 0)
+        sizeSecond.x = sizeSecond.y = ImGui::GetTextLineHeightWithSpacing();
+
+    sizeFirst *= window->FontWindowScale * ImGui::GetIO().FontGlobalScale;
+    sizeSecond *= window->FontWindowScale * ImGui::GetIO().FontGlobalScale;
+
+    ImGuiContext &g = *GImGui;
+    const ImGuiStyle &style = g.Style;
+
+    const ImGuiID id = window->GetID(label);
+    const ImVec2 textSize = ImGui::CalcTextSize(label, NULL, true);
+    const bool hasText = textSize.x > 0;
+
+    const float innerSpacing = hasText ? ((frame_padding >= 0) ? (float)frame_padding : (style.ItemInnerSpacing.x)) : 0.f;
+    const ImVec2 padding = (frame_padding >= 0) ? ImVec2((float)frame_padding, (float)frame_padding) : style.FramePadding;
+    const ImVec2 totalSizeWithoutPadding(sizeFirst.x + sizeSecond.x + innerSpacing + textSize.x, ImMax(sizeFirst.y, ImMax(sizeSecond.y, textSize.y)));
+    const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + totalSizeWithoutPadding + padding * 2);
+
+    // Ensure the button is properly sized to contain the images and text
+    ItemSize(bb);
+    if (!ItemAdd(bb, id))
+        return false;
+
+    bool hovered = false, held = false;
+    bool pressed = ButtonBehavior(bb, id, &hovered, &held);
+
+    // Render button frame
+    const ImU32 col = GetColorU32((hovered && held) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+    RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0f, style.FrameRounding));
+
+    ImVec2 start = bb.Min + padding;
+
+    // Render texIdFirst on the left (inside the button)
+    ImRect image_bb_first(start, start + sizeFirst);
+    if (bg_col.w > 0.0f)
+        window->DrawList->AddRectFilled(image_bb_first.Min, image_bb_first.Max, GetColorU32(bg_col));
+    window->DrawList->AddImage(texIdFirst, image_bb_first.Min, image_bb_first.Max, uv0, uv1, GetColorU32(tint_col));
+
+    // Render text in the middle
+    start.x += sizeFirst.x + innerSpacing;
+    if (sizeFirst.y > textSize.y)
+        start.y += (sizeFirst.y - textSize.y) * 0.5f;  // Center text vertically if image is larger
+    ImGui::RenderText(start, label);
+
+    // Render texIdSecond on the right (inside the button)
+    start.x += textSize.x + innerSpacing;
+    ImRect image_bb_second(start, start + sizeSecond);
+    window->DrawList->AddImage(texIdSecond, image_bb_second.Min, image_bb_second.Max, uv0, uv1, GetColorU32(tint_col));
+
+    return pressed;
+}
+
+
+
     bool ImageButtonWithText(ImTextureID texId, const char *label, const ImVec2 &imageSize, const ImVec2 &uv0, const ImVec2 &uv1, int frame_padding, const ImVec4 &bg_col, const ImVec4 &tint_col)
     {
         ImGuiWindow *window = GetCurrentWindow();
@@ -6584,6 +6649,80 @@ namespace ImGui
             ImGui::RenderText(start, label);
         return pressed;
     }
+
+    bool RightImageButtonWithText(ImTextureID texId, const char *label, const ImVec2 &imageSize, const ImVec2 &uv0, const ImVec2 &uv1, int frame_padding, const ImVec4 &bg_col, const ImVec4 &tint_col)
+{
+    ImGuiWindow *window = GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+
+    ImVec2 size = imageSize;
+    if (size.x <= 0 && size.y <= 0)
+    {
+        size.x = size.y = ImGui::GetTextLineHeightWithSpacing();
+    }
+    else
+    {
+        if (size.x <= 0)
+            size.x = size.y;
+        else if (size.y <= 0)
+            size.y = size.x;
+        size *= window->FontWindowScale * ImGui::GetIO().FontGlobalScale;
+    }
+
+    ImGuiContext &g = *GImGui;
+    const ImGuiStyle &style = g.Style;
+
+    const ImGuiID id = window->GetID(label);
+    const ImVec2 textSize = ImGui::CalcTextSize(label, NULL, true);
+    const bool hasText = textSize.x > 0;
+
+    const float innerSpacing = hasText ? ((frame_padding >= 0) ? (float)frame_padding : (style.ItemInnerSpacing.x)) : 0.f;
+    const ImVec2 padding = (frame_padding >= 0) ? ImVec2((float)frame_padding, (float)frame_padding) : style.FramePadding;
+    const ImVec2 totalSizeWithoutPadding(textSize.x + innerSpacing + size.x, size.y > textSize.y ? size.y : textSize.y);
+    const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + totalSizeWithoutPadding + padding * 2);
+    ImVec2 start(0, 0);
+
+    // Positionner le texte à gauche
+    start = window->DC.CursorPos + padding;
+    if (size.y > textSize.y)
+        start.y += (size.y - textSize.y) * .5f;
+    
+    ImRect text_bb(start, start + textSize);
+    
+    // Positionner l'image à droite du texte
+    start = window->DC.CursorPos + padding;
+    start.x += textSize.x + innerSpacing;
+    if (size.y < textSize.y)
+        start.y += (textSize.y - size.y) * .5f;
+
+    const ImRect image_bb(start, start + size);
+    
+    ItemSize(bb);
+    if (!ItemAdd(bb, id))
+        return false;
+
+    bool hovered = false, held = false;
+    bool pressed = ButtonBehavior(bb, id, &hovered, &held);
+
+    // Render
+    const ImU32 col = GetColorU32((hovered && held) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered
+                                                                                      : ImGuiCol_Button);
+    RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0f, style.FrameRounding));
+
+    if (bg_col.w > 0.0f)
+        window->DrawList->AddRectFilled(image_bb.Min, image_bb.Max, GetColorU32(bg_col));
+
+    // Rendu du texte à gauche
+    if (textSize.x > 0)
+        ImGui::RenderText(text_bb.Min, label);
+
+    // Rendu de l'image à droite
+    window->DrawList->AddImage(texId, image_bb.Min, image_bb.Max, uv0, uv1, GetColorU32(tint_col));
+
+    return pressed;
+}
+
 } // namespace ImGui
 
 static inline void ClampWindowRect(ImGuiWindow *window, const ImRect &visibility_rect)
@@ -6770,8 +6909,6 @@ void ImGui::RenderWindowDecorations(ImGuiWindow *window, const ImRect &title_bar
             RenderWindowOuterBorders(window);
     }
 }
-
-#include <iostream>
 
 // Render title text, collapse button, close button
 // When inside a dock node, this is handled in DockNodeCalcTabBarLayout() instead.
@@ -7869,7 +8006,7 @@ bool ImGui::Begin(const char *name, bool *p_open, ImGuiWindowFlags flags)
 //   You can use the "##" or "###" markers to use the same label with different id, or same id with different label. See documentation at the top of this file.
 // - Return false when window is collapsed, so you can early out in your code. You always need to call ImGui::End() even if false is returned.
 // - Passing 'bool* p_open' displays a Close button on the upper-right corner of the window, the pointed value will be set to false when the button is pressed.
-bool ImGui::Begin(const char *name, ImTextureID *logo, bool *p_open, ImGuiWindowFlags flags)
+bool ImGui::Begin(const char *name, ImTextureID *logo, bool *p_open, ImGuiWindowFlags flags, ImVec2 internal_padding)
 {
     ImGuiContext &g = *GImGui;
     const ImGuiStyle &style = g.Style;
@@ -8138,9 +8275,15 @@ bool ImGui::Begin(const char *name, ImTextureID *logo, bool *p_open, ImGuiWindow
             window->WindowBorderSize = ((flags & (ImGuiWindowFlags_Popup | ImGuiWindowFlags_Tooltip)) && !(flags & ImGuiWindowFlags_Modal)) ? style.PopupBorderSize : style.WindowBorderSize;
 
         if (!window->DockIsActive && (flags & ImGuiWindowFlags_ChildWindow) && !(flags & (ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_Popup)) && window->WindowBorderSize == 0.0f)
-            window->WindowPadding = ImVec2(0.0f, (flags & ImGuiWindowFlags_MenuBar || ImGuiWindowFlags_BottomBar) ? style.WindowPadding.y : 0.0f);
+        {
+            window->WindowPadding = ImVec2(0.0f, (flags & ImGuiWindowFlags_MenuBar) ? style.WindowPadding.y : 0.0f);
+            window->WindowPadding = ImVec2(0.0f, (flags & ImGuiWindowFlags_BottomBar) ? style.WindowPadding.y : 0.0f);
+        }
         else
             window->WindowPadding = style.WindowPadding;
+        
+        // Apply custom padding
+        window->WindowPadding = internal_padding;
 
         // Lock menu offset so size calculation can use it as menu-bar windows need a minimum size.
         window->DC.MenuBarOffset.x = ImMax(ImMax(window->WindowPadding.x, style.ItemSpacing.x), g.NextWindowData.MenuBarOffsetMinVal.x);
@@ -8213,7 +8356,7 @@ bool ImGui::Begin(const char *name, ImTextureID *logo, bool *p_open, ImGuiWindow
 
         // Decoration size
         const float decoration_up_height = window->TitleBarHeight() + window->MenuBarHeight();
-        const float decoration_down_height = window->TitleBarHeight() + window->BottomBarHeight();
+        const float decoration_down_height = window->BottomBarHeight();
 
         // POSITION
 
@@ -8413,7 +8556,7 @@ bool ImGui::Begin(const char *name, ImTextureID *logo, bool *p_open, ImGuiWindow
         window->InnerRect.Min.x = window->Pos.x;
         window->InnerRect.Min.y = window->Pos.y + decoration_up_height;
         window->InnerRect.Max.x = window->Pos.x + window->Size.x - window->ScrollbarSizes.x;
-        window->InnerRect.Max.y = window->Pos.y + window->Size.y - window->ScrollbarSizes.y;
+        window->InnerRect.Max.y = window->Pos.y + window->Size.y - window->ScrollbarSizes.y - decoration_down_height;
 
         // Inner clipping rectangle.
         // Will extend a little bit outside the normal work region.
@@ -13938,6 +14081,8 @@ static const char *GetFallbackWindowNameForWindowingList(ImGuiWindow *window)
         return "(Popup)";
     if ((window->Flags & ImGuiWindowFlags_MenuBar) && strcmp(window->Name, "##MainMenuBar") == 0)
         return "(Main menu bar)";
+    if ((window->Flags & ImGuiWindowFlags_BottomBar) && strcmp(window->Name, "##BottomMenuBar") == 0)
+        return "(Bottom menu bar)";
     if (window->DockNodeAsHost)
         return "(Dock node)";
     return "(Untitled)";
@@ -17769,7 +17914,6 @@ static void ImGui::DockNodeUpdateTabBar(ImGuiDockNode *node, ImGuiWindow *host_w
                 bool is_right_pressed = ImGui::IsMouseDown(ImGuiMouseButton_Right);
                 if (!window->ContextMenuDisabled)
                 {
-
                     if (ImGui::BeginPopupContextItem("TabContextMenu"))
                     {
                         ImVec4 grayColor = ImVec4(0.4f, 0.4f, 0.4f, 1.0f);
@@ -17847,8 +17991,6 @@ static void ImGui::DockNodeUpdateTabBar(ImGuiDockNode *node, ImGuiWindow *host_w
 
         float distance_moved = sqrtf((current_mouse_pos.x - g.DockTabStaticSelection.InitialClickPos.x) * (current_mouse_pos.x - g.DockTabStaticSelection.InitialClickPos.x) +
                                      (current_mouse_pos.y - g.DockTabStaticSelection.InitialClickPos.y) * (current_mouse_pos.y - g.DockTabStaticSelection.InitialClickPos.y));
-
-                        std::cout << "distance_moved_y" << distance_moved_y << std::endl;
 
                         if (distance_moved > drag_threshold)
                         {
