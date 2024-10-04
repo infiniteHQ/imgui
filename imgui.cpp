@@ -17714,6 +17714,34 @@ static ImGuiID ImGui::DockNodeUpdateWindowMenu(ImGuiDockNode *node, ImGuiTabBar 
     return ret_tab_id;
 }
 
+
+void ImGui::SetRenderCallback(ImGuiRenderCallback callback)
+{
+    ImGuiContext &g = *GImGui;
+    g.RenderCallbacks.push_back(callback);
+}
+
+const std::function<void()> ImGui::ConsumeCallback(const char* name)
+{
+    ImGuiContext &g = *GImGui;
+
+    auto it = std::find_if(g.RenderCallbacks.begin(), g.RenderCallbacks.end(),
+        [name](const ImGuiRenderCallback& callback)
+        {
+            return strcmp(callback.ID, name) == 0;
+        });
+
+    if (it != g.RenderCallbacks.end())
+    {
+        std::function<void()> cb = it->Callback;
+        g.RenderCallbacks.erase(it);
+        
+        return cb;
+    }
+
+    return nullptr;
+}
+
 // User helper to append/amend into a dock node tab bar. Most commonly used to add e.g. a "+" button.
 bool ImGui::DockNodeBeginAmendTabBar(ImGuiDockNode *node)
 {
@@ -17978,6 +18006,7 @@ static void ImGui::DockNodeUpdateTabBar(ImGuiDockNode *node, ImGuiWindow *host_w
                     );*/
 
                     const float drag_threshold = 10.0f;
+const float drag_threshold_y = 10.0f;
 
                     if (is_hovered && ImGui::IsMouseDown(ImGuiMouseButton_Left))
                     {
@@ -17992,7 +18021,7 @@ static void ImGui::DockNodeUpdateTabBar(ImGuiDockNode *node, ImGuiWindow *host_w
         float distance_moved = sqrtf((current_mouse_pos.x - g.DockTabStaticSelection.InitialClickPos.x) * (current_mouse_pos.x - g.DockTabStaticSelection.InitialClickPos.x) +
                                      (current_mouse_pos.y - g.DockTabStaticSelection.InitialClickPos.y) * (current_mouse_pos.y - g.DockTabStaticSelection.InitialClickPos.y));
 
-                        if (distance_moved > drag_threshold)
+                        if (distance_moved_y > drag_threshold_y)
                         {
                             if (!is_selected)
                             {

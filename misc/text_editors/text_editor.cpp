@@ -1135,16 +1135,7 @@ void TextEditor::Render(const char *aTitle, const ImVec2 &aSize, bool aBorder)
 
 	ColorizeInternal();
 
-	ImGuiContext &g = *GImGui;
-	ImFontAtlas *atlas = g.IO.Fonts;
-	ImFont *font = atlas->Fonts[2];
-	ImFont *fontold = atlas->Fonts[1];
-	ImGui::GetIO().FontDefault = font;
-	ImGui::PushFont(font);
 	Render();
-	ImGui::PopFont();
-
-	ImGui::GetIO().FontDefault = fontold;
 
 	if (mHandleKeyboardInputs)
 		ImGui::PopAllowKeyboardFocus();
@@ -2016,27 +2007,27 @@ void TextEditor::Redo(int aSteps)
 const TextEditor::Palette &TextEditor::GetDarkPalette()
 {
 	const static Palette p = {{
-		0xff7f7f7f, // Default
-		0xffd69c56, // Keyword
-		0xff00ff00, // Number
-		0xff7070e0, // String
-		0xff70a0e0, // Char literal
-		0xffffffff, // Punctuation
-		0xff408080, // Preprocessor
-		0xffaaaaaa, // Identifier
-		0xff9bc64d, // Known identifier
-		0xffc040a0, // Preproc identifier
-		0xff206020, // Comment (single line)
-		0xff406020, // Comment (multi line)
-		0xff101010, // Background
-		0xffe0e0e0, // Cursor
-		0x80a06020, // Selection
-		0x800020ff, // ErrorMarker
-		0x40f08000, // Breakpoint
-		0xff707000, // Line number
-		0x40000000, // Current line fill
-		0x40808080, // Current line fill (inactive)
-		0x40a0a0a0, // Current line edge
+		0xff00ffcc, // Default (Cyan néon)
+		0xffff00ff, // Keyword (Rose néon)
+		0xff00ffff, // Number (Bleu néon)
+		0xffffa500, // String (Orange néon)
+		0xff00ff66, // Char literal (Vert néon)
+		0xffffffff, // Punctuation (Blanc pur)
+		0xff00ff00, // Preprocessor (Vert fluo)
+		0xffd3d3d3, // Identifier (Gris clair)
+		0xff32cd32, // Known identifier (Lime néon)
+		0xffff1493, // Preproc identifier (Rose vif)
+		0xff7fff00, // Comment (single line) (Vert acidulé)
+		0xffadff2f, // Comment (multi line) (Vert clair néon)
+		0xff1a1a1a, // Background (Noir foncé)
+		0xffe6e6e6, // Cursor (Gris clair)
+		0xffff00ff, // Selection (Rose néon semi-transparent)
+		0xffff4500, // ErrorMarker (Rouge vif)
+		0xff00ff00, // Breakpoint (Vert néon)
+		0xff555555, // Line number (Gris foncé)
+		0x40404040, // Current line fill (Gris foncé, semi-transparent)
+		0x40808080, // Current line fill (inactive) (Gris moyen, semi-transparent)
+		0x40ff00ff, // Current line edge (Rose néon semi-transparent)
 	}};
 	return p;
 }
