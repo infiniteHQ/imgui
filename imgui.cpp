@@ -3714,7 +3714,7 @@ ImGuiWindow::ImGuiWindow(ImGuiContext *context, const char *name) : DrawListInst
 }
 
 // ImGuiWindow is mostly a dumb struct. It merely has a constructor and a few helper methods
-ImGuiWindow::ImGuiWindow(ImGuiContext *context, ImTextureID *_textureID, const char *name) : DrawListInst(NULL)
+ImGuiWindow::ImGuiWindow(ImGuiContext *context, ImTextureID _textureID, const char *name) : DrawListInst(NULL)
 {
     memset(this, 0, sizeof(*this));
     Name = ImStrdup(name);
@@ -6062,7 +6062,7 @@ static void UpdateWindowInFocusOrderList(ImGuiWindow *window, bool just_created,
     window->IsExplicitChild = new_is_explicit_child;
 }
 
-static ImGuiWindow *CreateNewWindow(const char *name, ImTextureID *texture, ImGuiWindowFlags flags)
+static ImGuiWindow *CreateNewWindow(const char *name, ImTextureID texture, ImGuiWindowFlags flags)
 {
     ImGuiContext &g = *GImGui;
     // IMGUI_DEBUG_LOG("CreateNewWindow '%s', flags = 0x%08X\n", name, flags);
@@ -8006,7 +8006,7 @@ bool ImGui::Begin(const char *name, bool *p_open, ImGuiWindowFlags flags)
 //   You can use the "##" or "###" markers to use the same label with different id, or same id with different label. See documentation at the top of this file.
 // - Return false when window is collapsed, so you can early out in your code. You always need to call ImGui::End() even if false is returned.
 // - Passing 'bool* p_open' displays a Close button on the upper-right corner of the window, the pointed value will be set to false when the button is pressed.
-bool ImGui::Begin(const char *name, ImTextureID *logo, bool *p_open, ImGuiWindowFlags flags, ImVec2 internal_padding)
+bool ImGui::Begin(const char *name, ImTextureID logo, bool *p_open, ImGuiWindowFlags flags, ImVec2 internal_padding)
 {
     ImGuiContext &g = *GImGui;
     const ImGuiStyle &style = g.Style;
@@ -8720,7 +8720,7 @@ bool ImGui::Begin(const char *name, ImTextureID *logo, bool *p_open, ImGuiWindow
 
         // Title bar
         if (!(flags & ImGuiWindowFlags_NoTitleBar) && !window->DockIsActive)
-            RenderWindowTitleBarContents(window, *logo, ImRect(title_bar_rect.Min.x + window->WindowBorderSize, title_bar_rect.Min.y, title_bar_rect.Max.x - window->WindowBorderSize, title_bar_rect.Max.y), name, p_open);
+            RenderWindowTitleBarContents(window, logo, ImRect(title_bar_rect.Min.x + window->WindowBorderSize, title_bar_rect.Min.y, title_bar_rect.Max.x - window->WindowBorderSize, title_bar_rect.Max.y), name, p_open);
 
         // Clear hit test shape every frame
         window->HitTestHoleSize.x = window->HitTestHoleSize.y = 0;

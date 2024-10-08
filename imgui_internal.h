@@ -2822,7 +2822,7 @@ struct IMGUI_API ImGuiWindowTempData
 struct IMGUI_API ImGuiWindow
 {
     char *Name;                                 // Window name, owned by the window.
-    ImTextureID *textureID;                     // Window logo
+    ImTextureID textureID;                     // Window logo
     ImGuiID ID;                                 // == ImHashStr(Name)
     ImGuiWindowFlags Flags, FlagsPreviousFrame; // See enum ImGuiWindowFlags_
     ImGuiWindowClass WindowClass;               // Advanced users only. Set with SetNextWindowClass()
@@ -2947,7 +2947,7 @@ struct IMGUI_API ImGuiWindow
     bool ContextMenuDisabled;
 
 public:
-    ImGuiWindow(ImGuiContext *context, ImTextureID *textureID, const char *name);
+    ImGuiWindow(ImGuiContext *context, ImTextureID textureID, const char *name);
     ImGuiWindow(ImGuiContext *context, const char *name);
     ~ImGuiWindow();
 
@@ -3824,7 +3824,7 @@ namespace ImGui
     IMGUI_API ImVec2 TabItemCalcSize(const char *label, bool has_close_button);
     IMGUI_API void TabItemBackground(ImDrawList *draw_list, const ImRect &bb, ImGuiTabItemFlags flags, ImU32 col);
     IMGUI_API void TabItemLabelAndCloseButton(ImDrawList *draw_list, const ImRect &bb, ImGuiTabItemFlags flags, ImVec2 frame_padding, const char *label, ImGuiID tab_id, ImGuiID close_button_id, bool is_contents_visible, bool *out_just_closed, bool *out_text_clipped);
-    IMGUI_API void TabItemLabelAndCloseButton(ImDrawList *draw_list, ImTextureID *texture, const ImRect &bb, ImGuiTabItemFlags flags, ImVec2 frame_padding, const char *label, ImGuiID tab_id, ImGuiID close_button_id, bool is_contents_visible, bool *out_just_closed, bool *out_text_clipped);
+    IMGUI_API void TabItemLabelAndCloseButton(ImDrawList *draw_list, ImTextureID texture, const ImRect &bb, ImGuiTabItemFlags flags, ImVec2 frame_padding, const char *label, ImGuiID tab_id, ImGuiID close_button_id, bool is_contents_visible, bool *out_just_closed, bool *out_text_clipped);
 
     // Render helpers
     // AVOID USING OUTSIDE OF IMGUI.CPP! NOT FOR PUBLIC CONSUMPTION. THOSE FUNCTIONS ARE A MESS. THEIR SIGNATURE AND BEHAVIOR WILL CHANGE, THEY NEED TO BE REFACTORED INTO SOMETHING DECENT.

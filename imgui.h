@@ -332,7 +332,7 @@ namespace ImGui
     //    returned true. Begin and BeginChild are the only odd ones out. Will be fixed in a future update.]
     // - Note that the bottom of window stack always contains a window called "Debug".
     IMGUI_API bool          Begin(const char* name, bool* p_open = NULL, ImGuiWindowFlags flags = 0);
-    IMGUI_API bool          Begin(const char* name, ImTextureID* logo, bool* p_open = NULL, ImGuiWindowFlags flags = 0, ImVec2 internal_padding = ImVec2(0,0));
+    IMGUI_API bool          Begin(const char* name, ImTextureID logo, bool* p_open = NULL, ImGuiWindowFlags flags = 0, ImVec2 internal_padding = ImVec2(0,0));
 
     IMGUI_API void          End();
 

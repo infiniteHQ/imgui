@@ -10032,7 +10032,7 @@ void ImGui::TabItemLabelAndCloseButton(ImDrawList* draw_list, const ImRect& bb, 
 
 // Render text label (with custom clipping) + Unsaved Document marker + Close Button logic
 // We tend to lock style.FramePadding for a given tab-bar, hence the 'frame_padding' parameter.
-void ImGui::TabItemLabelAndCloseButton(ImDrawList* draw_list, ImTextureID* texture, const ImRect& bb, ImGuiTabItemFlags flags, ImVec2 frame_padding, const char* label, ImGuiID tab_id, ImGuiID close_button_id, bool is_contents_visible, bool* out_just_closed, bool* out_text_clipped)
+void ImGui::TabItemLabelAndCloseButton(ImDrawList* draw_list, ImTextureID texture, const ImRect& bb, ImGuiTabItemFlags flags, ImVec2 frame_padding, const char* label, ImGuiID tab_id, ImGuiID close_button_id, bool is_contents_visible, bool* out_just_closed, bool* out_text_clipped)
 {
     ImGuiContext& g = *GImGui;
     ImVec2 label_size = CalcTextSize(label, NULL, true);
@@ -10050,7 +10050,7 @@ void ImGui::TabItemLabelAndCloseButton(ImDrawList* draw_list, ImTextureID* textu
         const float texture_width = 16.0f; // Adjust as needed
         const float texture_height = 16.0f; // Adjust as needed
         ImVec2 texture_pos(bb.Min.x + frame_padding.x, bb.Min.y + (bb.GetHeight() - texture_height) * 0.5f); // Adjust position as needed
-        draw_list->AddImage(*texture, texture_pos, ImVec2(texture_pos.x + texture_width, texture_pos.y + texture_height));
+        draw_list->AddImage(texture, texture_pos, ImVec2(texture_pos.x + texture_width, texture_pos.y + texture_height));
     }
 
     // In Style V2 we'll have full override of all colors per state (e.g. focused, selected)
