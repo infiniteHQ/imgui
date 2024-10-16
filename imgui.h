@@ -689,6 +689,7 @@ IMGUI_API float         GetTextLineHeight();                                    
     IMGUI_API void          EndMenu();                                                          // only call EndMenu() if BeginMenu() returns true!
     IMGUI_API bool          MenuItem(const char* label, const char* shortcut = NULL, bool selected = false, bool enabled = true);  // return true when activated.
     IMGUI_API bool          MenuItem(const char* label, const char* shortcut, bool* p_selected, bool enabled = true);              // return true when activated + toggle (*p_selected) if p_selected != NULL
+    IMGUI_API bool          MenuItem(const char* label, const char* shortcut, ImTextureID texture, bool selected, bool enabled = true);              // return true when activated + toggle (*p_selected) if p_selected != NULL
 
     // Tooltips
     // - Tooltip are windows following the mouse. They do not take focus away.

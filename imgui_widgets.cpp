@@ -8661,6 +8661,79 @@ void ImGui::EndMenu()
     EndPopup();
 }
 
+bool ImGui::MenuItemImageEx(const char* label, ImTextureID texture, const char* shortcut, bool selected, bool enabled)
+{
+    ImGuiWindow* window = GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+
+    ImGuiContext& g = *GImGui;
+    ImGuiStyle& style = g.Style;
+    ImVec2 pos = window->DC.CursorPos;
+    ImVec2 label_size = CalcTextSize(label, NULL, true);
+
+    const bool menuset_is_open = IsRootOfOpenMenuSet();
+    ImGuiWindow* backed_nav_window = g.NavWindow;
+    if (menuset_is_open)
+        g.NavWindow = window;
+
+    bool pressed;
+    PushID(label);
+    if (!enabled)
+        BeginDisabled();
+
+    const ImGuiSelectableFlags selectable_flags = ImGuiSelectableFlags_SelectOnRelease | ImGuiSelectableFlags_SetNavIdOnHover;
+    const ImGuiMenuColumns* offsets = &window->DC.MenuColumns;
+
+    if (window->DC.LayoutType == ImGuiLayoutType_Horizontal)
+    {
+        float w = label_size.x;
+        window->DC.CursorPos.x += IM_FLOOR(style.ItemSpacing.x * 0.5f);
+        ImVec2 text_pos(window->DC.CursorPos.x + offsets->OffsetLabel, window->DC.CursorPos.y + window->DC.CurrLineTextBaseOffset);
+        PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x * 2.0f, style.ItemSpacing.y));
+        pressed = Selectable("", selected, selectable_flags, ImVec2(w, 0.0f));
+        PopStyleVar();
+        RenderText(text_pos, label);
+        window->DC.CursorPos.x += IM_FLOOR(style.ItemSpacing.x * (-1.0f + 0.5f));
+    }
+    else
+    {
+        float icon_w = (texture != NULL) ? g.FontSize : 0.0f;
+        float shortcut_w = (shortcut && shortcut[0]) ? CalcTextSize(shortcut, NULL).x : 0.0f;
+        float checkmark_w = IM_FLOOR(g.FontSize * 1.20f);
+        float min_w = window->DC.MenuColumns.DeclColumns(icon_w, label_size.x, shortcut_w, checkmark_w);
+        float stretch_w = ImMax(0.0f, GetContentRegionAvail().x - min_w);
+        pressed = Selectable("", false, selectable_flags | ImGuiSelectableFlags_SpanAvailWidth, ImVec2(min_w, 0.0f));
+
+        RenderText(pos + ImVec2(offsets->OffsetLabel, 0.0f), label);
+        
+        // Render the texture instead of icon text
+        if (texture != NULL)
+        {
+            ImVec2 texture_size(g.FontSize, g.FontSize); // Set size for the texture (e.g., square icon)
+            ImVec2 texture_pos = pos + ImVec2(offsets->OffsetIcon, 0.0f);
+            window->DrawList->AddImage(texture, texture_pos, texture_pos + texture_size);
+        }
+
+        if (shortcut_w > 0.0f)
+        {
+            PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled]);
+            RenderText(pos + ImVec2(offsets->OffsetShortcut + stretch_w, 0.0f), shortcut, NULL, false);
+            PopStyleColor();
+        }
+        if (selected)
+            RenderCheckMark(window->DrawList, pos + ImVec2(offsets->OffsetMark + stretch_w + g.FontSize * 0.40f, g.FontSize * 0.134f * 0.5f), GetColorU32(ImGuiCol_Text), g.FontSize * 0.866f);
+    }
+    IMGUI_TEST_ENGINE_ITEM_INFO(g.LastItemData.ID, label, g.LastItemData.StatusFlags | ImGuiItemStatusFlags_Checkable | (selected ? ImGuiItemStatusFlags_Checked : 0));
+    if (!enabled)
+        EndDisabled();
+    PopID();
+    if (menuset_is_open)
+        g.NavWindow = backed_nav_window;
+
+    return pressed;
+}
+
 bool ImGui::MenuItemEx(const char* label, const char* icon, const char* shortcut, bool selected, bool enabled)
 {
     ImGuiWindow* window = GetCurrentWindow();
@@ -8735,6 +8808,11 @@ bool ImGui::MenuItemEx(const char* label, const char* icon, const char* shortcut
 bool ImGui::MenuItem(const char* label, const char* shortcut, bool selected, bool enabled)
 {
     return MenuItemEx(label, NULL, shortcut, selected, enabled);
+}
+
+bool ImGui::MenuItem(const char* label, const char* shortcut, ImTextureID texture, bool selected, bool enabled)
+{
+    return MenuItemImageEx(label, texture, shortcut, selected, enabled);
 }
 
 bool ImGui::MenuItem(const char* label, const char* shortcut, bool* p_selected, bool enabled)

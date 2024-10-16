@@ -3571,6 +3571,7 @@ namespace ImGui
     IMGUI_API bool BeginMenuEx(const char *label, const char *icon, bool enabled = true);
     IMGUI_API bool BeginMenuImageEx(const char *label, ImTextureID *texture, const char *icon, bool enabled = true);
     IMGUI_API bool MenuItemEx(const char *label, const char *icon, const char *shortcut = NULL, bool selected = false, bool enabled = true);
+    IMGUI_API bool MenuItemImageEx(const char *label, ImTextureID icon, const char *shortcut = NULL, bool selected = false, bool enabled = true);
 
     // Combos
     IMGUI_API bool BeginComboPopup(ImGuiID popup_id, const ImRect &bb, ImGuiComboFlags flags);
