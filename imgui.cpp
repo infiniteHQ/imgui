@@ -865,8 +865,15 @@ CODE
 #include <TargetConditionals.h>
 #endif
 
+
+#ifdef CHERRY_SDL
+#include "../../lib/sdl2/include/SDL.h"
+#include "../../lib/sdl2/include/SDL_vulkan.h"
+#else
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
+#endif
+
 
 // Visual Studio warnings
 #ifdef _MSC_VER
