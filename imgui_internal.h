@@ -2945,6 +2945,7 @@ struct IMGUI_API ImGuiWindow
     bool Closable;
     bool DragDisabled;
     bool ContextMenuDisabled;
+    float CustomThresholdY = 10.0f;
 
 public:
     ImGuiWindow(ImGuiContext *context, ImTextureID textureID, const char *name);

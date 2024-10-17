@@ -18007,8 +18007,7 @@ static void ImGui::DockNodeUpdateTabBar(ImGuiDockNode *node, ImGuiWindow *host_w
                         2.0f
                     );*/
 
-                    const float drag_threshold = 10.0f;
-                    const float drag_threshold_y = 10.0f;
+                    const float drag_threshold_y = window->CustomThresholdY;
 
                     if (is_hovered && ImGui::IsMouseDown(ImGuiMouseButton_Left))
                     {
