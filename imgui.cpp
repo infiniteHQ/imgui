@@ -6533,6 +6533,70 @@ static bool ImGui::UpdateWindowManualResize(ImGuiWindow *window, const ImVec2 &s
 
 namespace ImGui
 {
+
+bool TextButtonWithImageWithIcon(ImTextureID texIdFirst, ImTextureID texIdSecond, const char* label, const ImVec2& imageSizeFirst, const ImVec2& imageSizeSecond, const ImVec2 &uv0, const ImVec2 &uv1, int frame_padding, const ImVec4 &bg_col, const ImVec4 &tint_col)
+{
+    ImGuiWindow *window = GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+
+    ImVec2 sizeFirst = imageSizeFirst;
+    ImVec2 sizeSecond = imageSizeSecond;
+
+    if (sizeFirst.x <= 0 && sizeFirst.y <= 0)
+        sizeFirst.x = sizeFirst.y = ImGui::GetTextLineHeightWithSpacing();
+    if (sizeSecond.x <= 0 && sizeSecond.y <= 0)
+        sizeSecond.x = sizeSecond.y = ImGui::GetTextLineHeightWithSpacing();
+
+    sizeFirst *= window->FontWindowScale * ImGui::GetIO().FontGlobalScale;
+    sizeSecond *= window->FontWindowScale * ImGui::GetIO().FontGlobalScale;
+
+    ImGuiContext &g = *GImGui;
+    const ImGuiStyle &style = g.Style;
+
+    const ImGuiID id = window->GetID(label);
+    const ImVec2 textSize = ImGui::CalcTextSize(label, NULL, true);
+    const bool hasText = textSize.x > 0;
+
+    const float innerSpacing = hasText ? ((frame_padding >= 0) ? (float)frame_padding : (style.ItemInnerSpacing.x)) : 0.f;
+    const ImVec2 padding = (frame_padding >= 0) ? ImVec2((float)frame_padding, (float)frame_padding) : style.FramePadding;
+    const ImVec2 totalSizeWithoutPadding(textSize.x + sizeFirst.x + sizeSecond.x + 2 * innerSpacing, ImMax(sizeFirst.y, ImMax(sizeSecond.y, textSize.y)));
+    const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + totalSizeWithoutPadding + padding * 2);
+
+    // Ensure the button is properly sized to contain the images and text
+    ItemSize(bb);
+    if (!ItemAdd(bb, id))
+        return false;
+
+    bool hovered = false, held = false;
+    bool pressed = ButtonBehavior(bb, id, &hovered, &held);
+
+    // Render button frame
+    const ImU32 col = GetColorU32((hovered && held) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+    RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0f, style.FrameRounding));
+
+    ImVec2 start = bb.Min + padding;
+
+    // Render text first
+    ImGui::RenderText(start, label);
+    start.x += textSize.x + innerSpacing;
+
+    // Render texIdFirst in the middle (inside the button)
+    ImRect image_bb_first(start, start + sizeFirst);
+    if (bg_col.w > 0.0f)
+        window->DrawList->AddRectFilled(image_bb_first.Min, image_bb_first.Max, GetColorU32(bg_col));
+    window->DrawList->AddImage(texIdFirst, image_bb_first.Min, image_bb_first.Max, uv0, uv1, GetColorU32(tint_col));
+
+    // Render texIdSecond on the right (inside the button)
+    start.x += sizeFirst.x + innerSpacing;
+    ImRect image_bb_second(start, start + sizeSecond);
+    window->DrawList->AddImage(texIdSecond, image_bb_second.Min, image_bb_second.Max, uv0, uv1, GetColorU32(tint_col));
+
+    return pressed;
+}
+
+
+
 bool ImageButtonWithTextWithIcon(ImTextureID texIdFirst, ImTextureID texIdSecond, const char* label, const ImVec2& imageSizeFirst, const ImVec2& imageSizeSecond, const ImVec2 &uv0, const ImVec2 &uv1, int frame_padding, const ImVec4 &bg_col, const ImVec4 &tint_col)
 {
     ImGuiWindow *window = GetCurrentWindow();
