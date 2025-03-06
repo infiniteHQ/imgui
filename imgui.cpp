@@ -6578,7 +6578,7 @@ bool TextButtonWithImageWithIcon(ImTextureID texIdFirst, ImTextureID texIdSecond
     ImVec2 start = bb.Min + padding;
 
     // Render text first
-    ImGui::RenderText(start, label);
+    ImGui::RenderText(ImVec2(start.x, start.y + 2.0), label);
     start.x += textSize.x + innerSpacing;
 
     // Render texIdFirst in the middle (inside the button)
@@ -6654,7 +6654,7 @@ bool ImageButtonWithTextWithIcon(ImTextureID texIdFirst, ImTextureID texIdSecond
 
     // Render texIdSecond on the right (inside the button)
     start.x += textSize.x + innerSpacing;
-    ImRect image_bb_second(start, start + sizeSecond);
+    ImRect image_bb_second(ImVec2(start.x, start.y - 2.75f), ImVec2(start.x, start.y - 2.75f) + sizeSecond);
     window->DrawList->AddImage(texIdSecond, image_bb_second.Min, image_bb_second.Max, uv0, uv1, GetColorU32(tint_col));
 
     return pressed;
