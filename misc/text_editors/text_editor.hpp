@@ -196,7 +196,8 @@ public:
 		static const LanguageDefinition& Lua();
 	};
 
-	TextEditor(const std::string&  PathToFile);
+	//TextEditor(const std::filesystem::path& PathToFile);
+	TextEditor(const std::string& buffer);
 	~TextEditor();
 
 

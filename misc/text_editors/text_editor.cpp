@@ -23,7 +23,8 @@ bool equals(InputIt1 first1, InputIt1 last1,
 	return first1 == last1 && first2 == last2;
 }
 
-TextEditor::TextEditor(const std::string& PathToFile)
+
+/*TextEditor::TextEditor(const std::filesystem::path& PathToFile)
 	: mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4), mOverwrite(false), mReadOnly(false), mWithinRender(false), mScrollToCursor(false), mScrollToTop(false), mTextChanged(false), mColorizerEnabled(true), mTextStart(20.0f), mLeftMargin(10), mCursorPositionChanged(false), mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(SelectionMode::Normal), mCheckComments(true), mLastClick(-1.0f), mHandleKeyboardInputs(true), mHandleMouseInputs(true), mIgnoreImGuiChild(false), mShowWhitespaces(true), mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
 {
 	this->opened = true;
@@ -31,6 +32,17 @@ TextEditor::TextEditor(const std::string& PathToFile)
 
 	SetPalette(GetDarkPalette());
 	SetLanguageDefinition(LanguageDefinition::HLSL());
+	mLines.push_back(Line());
+}*/
+
+TextEditor::TextEditor(const std::string& buffer)
+	: mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4), mOverwrite(false), mReadOnly(false), mWithinRender(false), mScrollToCursor(false), mScrollToTop(false), mTextChanged(false), mColorizerEnabled(true), mTextStart(20.0f), mLeftMargin(10), mCursorPositionChanged(false), mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(SelectionMode::Normal), mCheckComments(true), mLastClick(-1.0f), mHandleKeyboardInputs(true), mHandleMouseInputs(true), mIgnoreImGuiChild(false), mShowWhitespaces(true), mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
+{
+	this->opened = true;
+	this->SetText(buffer);
+
+	SetPalette(GetDarkPalette());
+	SetLanguageDefinition(LanguageDefinition::CPlusPlus());
 	mLines.push_back(Line());
 }
 
@@ -1120,6 +1132,10 @@ void TextEditor::Render(const char *aTitle, const ImVec2 &aSize, bool aBorder)
 	mCursorPositionChanged = false;
 
 	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4(mPalette[(int)PaletteIndex::Background]));
+	ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0,0,0,0));
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, ImVec2(0.0f, 0.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 	if (!mIgnoreImGuiChild)
 		ImGui::BeginChild(aTitle, aSize, aBorder, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar | ImGuiWindowFlags_NoMove);
@@ -1143,8 +1159,8 @@ void TextEditor::Render(const char *aTitle, const ImVec2 &aSize, bool aBorder)
 	if (!mIgnoreImGuiChild)
 		ImGui::EndChild();
 
-	ImGui::PopStyleVar();
-	ImGui::PopStyleColor();
+	ImGui::PopStyleVar(4);
+	ImGui::PopStyleColor(2);
 
 	mWithinRender = false;
 }

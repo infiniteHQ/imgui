@@ -5824,7 +5824,7 @@ void ed::Config::BeginSave()
 
 bool ed::Config::Save(const std::string& data, SaveReasonFlags flags)
 {
-    if (SaveSettings)
+    /*if (SaveSettings) TODO : Saving APi
     {
         return SaveSettings(data.c_str(), data.size(), flags, UserPointer);
     }
@@ -5835,7 +5835,7 @@ bool ed::Config::Save(const std::string& data, SaveReasonFlags flags)
             settingsFile << data;
 
         return !!settingsFile;
-    }
+    }*/
 
     return false;
 }
