@@ -20907,117 +20907,71 @@ static void ImGui::DockNodeUpdateTabBar(ImGuiDockNode *node,
                     window)) {
         ImVec2 tab_item_pos = ImGui::GetItemRectMin();
         ImVec2 tab_item_size = ImGui::GetItemRectSize();
-
         bool is_hovered = ImGui::IsItemHovered();
-        bool is_pressed = ImGui::IsMouseDown(ImGuiMouseButton_Left);
-        bool is_right_pressed = ImGui::IsMouseDown(ImGuiMouseButton_Right);
+
         if (!window->ContextMenuDisabled) {
           if (ImGui::BeginPopupContextItem("TabContextMenu")) {
-            ImVec4 grayColor = ImVec4(0.4f, 0.4f, 0.4f, 1.0f);
-            ImVec4 graySeparatorColor = ImVec4(0.4f, 0.4f, 0.4f, 0.5f);
-            ImVec4 darkBackgroundColor = ImVec4(0.15f, 0.15f, 0.15f, 1.0f);
-            ImVec4 lightBorderColor = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
-
-            ImGui::PushStyleColor(ImGuiCol_PopupBg, darkBackgroundColor);
-            ImGui::PushStyleColor(ImGuiCol_Border, lightBorderColor);
+            ImGui::PushStyleColor(ImGuiCol_PopupBg,
+                                  ImVec4(0.15f, 0.15f, 0.15f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_Border,
+                                  ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
             ImGui::PushStyleVar(ImGuiStyleVar_PopupRounding, 3.0f);
-            if (window->Closable) {
-              if (ImGui::MenuItem("Close window",
-                                  "Close this current window")) {
-                if (window->CloseCallback) {
-                  window->CloseCallback();
-                }
-              }
+
+            if (window->Closable &&
+                ImGui::MenuItem("Close window", "Close this current window")) {
+              if (window->CloseCallback)
+                window->CloseCallback();
             }
             if (window->ContextMenuCallback) {
-              ImGui::PushStyleColor(ImGuiCol_Separator, graySeparatorColor);
+              ImGui::PushStyleColor(ImGuiCol_Separator,
+                                    ImVec4(0.4f, 0.4f, 0.4f, 0.5f));
               ImGui::Separator();
               ImGui::PopStyleColor();
               window->ContextMenuCallback();
             }
-
             ImGui::PopStyleVar();
             ImGui::PopStyleColor(2);
-
             ImGui::EndPopup();
           }
-
           if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
             ImGui::OpenPopup("TabContextMenu");
           }
         }
 
         if (!window->DragDisabled) {
-
+          ImGuiContext &g_imgui = *GImGui;
           bool is_selected = (g.DockTabStaticSelection.TabName == window->Name);
 
-          /* DEBUG ONLY
-          ImU32 color;
-          if (is_hovered)
-              color = IM_COL32(255, 0, 0, 255); // Rouge si survolé
-          else if (is_selected)
-              color = IM_COL32(255, 165, 0, 255); // Orange si sélectionné
-          else
-              color = IM_COL32(128, 0, 128, 255); // Violet sinon
+          const float drag_threshold_y =
+              window->CustomThresholdY > 0 ? window->CustomThresholdY : 15.0f;
 
-          draw_list->AddRect(
-              tab_item_pos,
-              tab_item_pos + tab_item_size,
-              color,
-              0.0f,
-              ImDrawCornerFlags_All,
-              2.0f
-          );*/
+          if (ImGui::IsItemActive()) {
+            ImVec2 drag_delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
 
-          const float drag_threshold_y = window->CustomThresholdY;
+            if (!is_selected && fabsf(drag_delta.y) > drag_threshold_y &&
+                fabsf(drag_delta.y) > fabsf(drag_delta.x)) {
+              g.DockTabStaticSelection.TabName = window->Name;
+              g.DockTabStaticSelection.TitleBarPos = tab_item_pos;
+              g.DockTabStaticSelection.TitleBarSize = tab_item_size;
+              g.DockTabStaticSelection.Pressed = true;
+              g.DockTabStaticSelection.InitialClickPos =
+                  ImGui::GetIO().MouseClickedPos[0];
 
-          if (is_hovered && ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-            if (g.DockTabStaticSelection.InitialClickPos.x == 0 &&
-                g.DockTabStaticSelection.InitialClickPos.y == 0) {
-              g.DockTabStaticSelection.InitialClickPos = ImGui::GetMousePos();
+              ImGui::ClearActiveID();
             }
+          }
 
-            ImVec2 current_mouse_pos = ImGui::GetMousePos();
-            float distance_moved_y =
-                fabsf(current_mouse_pos.y -
-                      g.DockTabStaticSelection.InitialClickPos.y);
-
-            float distance_moved =
-                sqrtf((current_mouse_pos.x -
-                       g.DockTabStaticSelection.InitialClickPos.x) *
-                          (current_mouse_pos.x -
-                           g.DockTabStaticSelection.InitialClickPos.x) +
-                      (current_mouse_pos.y -
-                       g.DockTabStaticSelection.InitialClickPos.y) *
-                          (current_mouse_pos.y -
-                           g.DockTabStaticSelection.InitialClickPos.y));
-
-            if (distance_moved_y > drag_threshold_y) {
-              if (!is_selected) {
-                g.DockTabStaticSelection.TabName = window->Name;
-                g.DockTabStaticSelection.TitleBarPos = tab_item_pos;
-                g.DockTabStaticSelection.TitleBarSize = tab_item_size;
-                g.DockTabStaticSelection.Pressed = true;
-              }
-            }
-          } else {
-            int mouse_x, mouse_y;
-            Uint32 mouse_buttons = SDL_GetGlobalMouseState(&mouse_x, &mouse_y);
-
-            if (!(mouse_buttons & SDL_BUTTON(SDL_BUTTON_LEFT))) {
+          int mouse_x, mouse_y;
+          Uint32 mouse_buttons = SDL_GetGlobalMouseState(&mouse_x, &mouse_y);
+          if (!(mouse_buttons & SDL_BUTTON(SDL_BUTTON_LEFT))) {
+            if (is_selected) {
+              g.DockTabStaticSelection.TabName = "none";
+              g.DockTabStaticSelection.Pressed = false;
               g.DockTabStaticSelection.InitialClickPos = ImVec2(0, 0);
-
-              if (is_selected) {
-                g.DockTabStaticSelection.TabName = "none";
-                g.DockTabStaticSelection.TitleBarPos = ImVec2(0, 0);
-                g.DockTabStaticSelection.TitleBarSize = ImVec2(0, 0);
-                g.DockTabStaticSelection.Pressed = false;
-              }
             }
           }
         }
       }
-
       if (!tab_open)
         node->WantCloseTabId = window->TabId;
       if (tab_bar->VisibleTabId == window->TabId) {
